@@ -1,21 +1,30 @@
 import socket
+import threading
+
+def scan_single_port(target, port, open_ports):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(1)  # Timeout pour éviter les blocages
+        try:
+            result = sock.connect_ex((target, port))
+            if result == 0:
+                print(f"[+] Port {port} est ouvert")
+                open_ports.append(port)
+        except socket.error as e:
+            print(f"Erreur de connexion au port {port}: {e}")
 
 def scan_ports(target, start_port, end_port):
     print(f"Scan de {target} du port {start_port} au port {end_port}...")
     open_ports = []
-    
+    threads = []
+
     for port in range(start_port, end_port + 1):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.settimeout(1)  # Timeout pour éviter les blocages
-            
-            try:
-                result = sock.connect_ex((target, port))
-                if result == 0:
-                    print(f"[+] Port {port} est ouvert")
-                    open_ports.append(port)
-            except socket.error as e:
-                print(f"Erreur de connexion au port {port}: {e}")
-    
+        thread = threading.Thread(target=scan_single_port, args=(target, port, open_ports))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
     print(f"Scan terminé. {len(open_ports)} ports ouverts trouvés.")
 
 if __name__ == "__main__":
