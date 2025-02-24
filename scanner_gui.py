@@ -3,6 +3,10 @@ import threading
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
+import csv
+
+# Variable pour suivre l'état de l'option d'enregistrement
+save_to_csv = tk.BooleanVar()
 
 def scan_ports():
     target = entry_ip.get()
@@ -12,12 +16,16 @@ def scan_ports():
     result_text.delete(1.0, tk.END)  # Efface l'ancienne sortie
     result_text.insert(tk.END, f"Scanning {target} from port {start_port} to {end_port}...\n")
 
+    open_ports = []
+
     def scan_single_port(port):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
             if sock.connect_ex((target, port)) == 0:
-                result_text.insert(tk.END, f"[+] Port {port} is open\n")
+                service_name = socket.getservbyport(port, "tcp")
+                result_text.insert(tk.END, f"[+] Port {port} is open (Service: {service_name})\n")
+                open_ports.append((port, service_name))
             sock.close()
         except Exception as e:
             pass
@@ -37,7 +45,15 @@ def scan_ports():
     for thread in threads:
         thread.join()
 
-    messagebox.showinfo("Scan terminé", "Le scan est terminé !")
+    # Écrire les résultats dans un fichier CSV si l'option est activée
+    if save_to_csv.get():
+        with open('scan_results.csv', 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(['Port', 'Service'])
+            csvwriter.writerows(open_ports)
+        messagebox.showinfo("Scan terminé", "Le scan est terminé ! Les résultats ont été enregistrés dans 'scan_results.csv'.")
+    else:
+        messagebox.showinfo("Scan terminé", "Le scan est terminé !")
 
 # Création de la fenêtre principale
 root = tk.Tk()
@@ -70,6 +86,10 @@ progress_bar.pack(pady=10)
 # Zone d'affichage des résultats
 result_text = tk.Text(root, height=10, width=50)
 result_text.pack()
+
+# Bouton pour activer ou désactiver l'enregistrement des résultats dans un fichier CSV
+chk_save_to_csv = tk.Checkbutton(root, text="Enregistrer les résultats dans un fichier CSV", variable=save_to_csv)
+chk_save_to_csv.pack()
 
 # Lancement de l'application
 root.mainloop()
