@@ -2,6 +2,7 @@ import socket
 import threading
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import ttk
 
 def scan_ports():
     target = entry_ip.get()
@@ -20,6 +21,12 @@ def scan_ports():
             sock.close()
         except Exception as e:
             pass
+        finally:
+            progress_bar.step(1)
+
+    total_ports = end_port - start_port + 1
+    progress_bar["maximum"] = total_ports
+    progress_bar["value"] = 0
 
     threads = []
     for port in range(start_port, end_port + 1):
@@ -55,6 +62,10 @@ entry_end.pack()
 # Bouton pour démarrer le scan
 btn_scan = tk.Button(root, text="Scanner", command=scan_ports)
 btn_scan.pack()
+
+# Barre de progression
+progress_bar = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
+progress_bar.pack(pady=10)
 
 # Zone d'affichage des résultats
 result_text = tk.Text(root, height=10, width=50)
