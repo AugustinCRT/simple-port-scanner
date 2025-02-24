@@ -5,9 +5,6 @@ from tkinter import messagebox
 from tkinter import ttk
 import csv
 
-# Variable pour suivre l'état de l'option d'enregistrement
-save_to_csv = tk.BooleanVar()
-
 def scan_ports():
     target = entry_ip.get()
     start_port = int(entry_start.get())
@@ -59,6 +56,9 @@ def scan_ports():
 root = tk.Tk()
 root.title("Scanner de Ports")
 root.geometry("400x400")
+
+# Variable pour suivre l'état de l'option d'enregistrement
+save_to_csv = tk.BooleanVar()
 
 # Zone pour entrer l'IP
 tk.Label(root, text="Adresse IP cible :").pack()
