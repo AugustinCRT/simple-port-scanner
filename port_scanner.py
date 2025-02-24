@@ -7,10 +7,14 @@ def scan_single_port(target, port, open_ports):
         try:
             result = sock.connect_ex((target, port))
             if result == 0:
-                print(f"[+] Port {port} est ouvert")
-                open_ports.append(port)
+                service_name = socket.getservbyport(port, "tcp")
+                print(f"[+] Port {port} est ouvert (Service: {service_name})")
+                open_ports.append((port, service_name))
         except socket.error as e:
             print(f"Erreur de connexion au port {port}: {e}")
+        except socket.error:
+            print(f"[+] Port {port} est ouvert (Service: inconnu)")
+            open_ports.append((port, "inconnu"))
 
 def scan_ports(target, start_port, end_port):
     print(f"Scan de {target} du port {start_port} au port {end_port}...")
@@ -26,6 +30,8 @@ def scan_ports(target, start_port, end_port):
         thread.join()
 
     print(f"Scan terminé. {len(open_ports)} ports ouverts trouvés.")
+    for port, service in open_ports:
+        print(f"Port {port} : {service}")
 
 if __name__ == "__main__":
     try:
